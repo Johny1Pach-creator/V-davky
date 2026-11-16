@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Výdavky">
+<meta name="theme-color" content="#0b0c10">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" href="icon.png">
+<title>Moje výdavky</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* Polnoc: one dark world. Balance card on top, two big actions, list below, floating tab bar at the thumb. */
+:root{
+  --bg:#0b0c10; --surface:#15171e; --ink:#f2f3f7; --muted:#9aa0ae; --line:#23262f;
+  --accent:#a9b4ff; --on-accent:#0b0c10; --danger:#ff8f8a; --raised:#1c1f28; --raised-line:#343846;
+  --c1:#3987e5; --c2:#d95926; --c3:#199e70; --c4:#c98500; --c5:#d55181; --c6:#0ca30c; --c7:#9085e9;
+  --track:#2a2d38;
+  --display:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --body:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.4;-webkit-text-size-adjust:100%}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer;-webkit-tap-highlight-color:transparent}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.app{height:100%;display:flex;flex-direction:column;max-width:560px;margin:0 auto;padding-top:env(safe-area-inset-top)}
+main{flex:1;overflow-y:auto;padding:16px 16px 24px;display:flex;flex-direction:column;gap:16px}
+h1,h2{font-family:var(--display);margin:0;text-wrap:balance}
+h1{font-size:21px;font-weight:700}
+h2{font-size:16px;font-weight:700}
+.muted{color:var(--muted)}
+.link{border:0;background:transparent;padding:6px 0;color:var(--muted);font-size:13px;text-align:left}
+.link u{color:var(--accent);text-underline-offset:3px}
+.link:disabled u{display:none}
+.small{font-size:13px}
+.row{display:flex;align-items:center;gap:12px}
+.between{justify-content:space-between}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:18px;display:flex;flex-direction:column;gap:14px}
+.note{border:1px dashed var(--line);border-radius:12px;padding:10px 12px;font-size:14px;color:var(--muted)}
+
+.balance{font-family:var(--display);font-size:50px;font-weight:800;letter-spacing:-.03em;line-height:1.05;overflow-wrap:anywhere}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.split div{display:flex;flex-direction:column;gap:2px}
+.split strong{font-size:17px;font-weight:700}
+.key{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px}
+
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.big{border:0;border-radius:18px;padding:20px 12px;font-family:var(--display);font-size:19px;font-weight:800;display:flex;flex-direction:column;gap:2px;align-items:flex-start;text-align:left}
+.big span{font-family:var(--body);font-size:13px;font-weight:400;opacity:.85}
+.big.in{background:var(--accent);color:var(--on-accent)}
+.big.out{background:var(--raised);color:var(--ink);box-shadow:inset 0 0 0 1px var(--raised-line)}
+.big:disabled{opacity:.45;cursor:default}
+.btn{white-space:nowrap;flex:none;border:1px solid var(--raised-line);background:var(--raised);border-radius:12px;padding:10px 14px;font-weight:500}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600}
+.btn.danger{color:var(--danger)}
+.btn:disabled{opacity:.45;cursor:default}
+
+.list{display:flex;flex-direction:column}
+.entry{display:grid;grid-template-columns:auto 1fr auto auto;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.entry:first-child{border-top:0}
+.dot{width:12px;height:12px;border-radius:4px;background:var(--muted)}
+.entry .what{min-width:0;display:flex;flex-direction:column}
+.entry .what b{font-weight:500;overflow-wrap:anywhere}
+.amt{font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap}
+.x{border:0;background:transparent;color:var(--muted);font-size:20px;line-height:1;padding:8px;border-radius:8px}
+
+.bars{display:flex;flex-direction:column;gap:12px}
+.bar-row{display:flex;flex-direction:column;gap:4px}
+.bar-head{display:flex;justify-content:space-between;gap:12px;font-size:14px}
+.bar-head .v{font-variant-numeric:tabular-nums;white-space:nowrap}
+.meter{height:8px;border-radius:4px;background:var(--track);overflow:hidden}
+.meter div{height:100%;border-radius:4px;background:var(--accent)}
+.track{height:12px;background:var(--track);border-radius:4px;overflow:hidden}
+.fill{height:100%;border-radius:0 4px 4px 0;min-width:2px}
+.pair{display:flex;flex-direction:column;gap:2px}
+.pair .line{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}
+.pair .v{font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap;min-width:84px;text-align:right}
+.legend{display:flex;gap:16px;font-size:13px;color:var(--muted);flex-wrap:wrap}
+select{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 12px;width:100%}
+
+.month{display:grid;grid-template-columns:1fr auto;gap:4px 12px;padding:12px 0;border-top:1px solid var(--line);background:transparent;border-left:0;border-right:0;border-bottom:0;text-align:left;width:100%}
+.month:first-child{border-top:0}
+.pill{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:2px 8px;color:var(--muted);margin-left:8px;white-space:nowrap}
+
+nav{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;border:1px solid var(--line);background:var(--surface);padding:5px;border-radius:20px;margin:0 16px calc(12px + env(safe-area-inset-bottom))}
+nav a{text-align:center;padding:12px 4px;border-radius:15px;color:var(--muted);text-decoration:none;font-weight:500;font-size:15px}
+nav a[aria-current="page"]{color:var(--ink);background:var(--track);font-weight:700}
+
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);display:flex;justify-content:center;align-items:flex-start;padding:24px 16px;overflow-y:auto;z-index:10}
+.overlay[hidden]{display:none}
+.sheet{border:1px solid var(--line);background:var(--surface);border-radius:20px;padding:20px;width:100%;max-width:480px;display:flex;flex-direction:column;gap:16px}
+.cats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cat{border:1px solid var(--raised-line);background:var(--raised);border-radius:14px;padding:14px 12px;display:flex;align-items:center;gap:10px;font-weight:500;text-align:left}
+.cat[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+label{display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--muted)}
+input[type=text]{border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:12px;font-size:18px;color:var(--ink);width:100%}
+.err{color:var(--danger);font-size:14px;min-height:1.4em}
+.sheet .row{flex-wrap:wrap}
+.toast{position:fixed;left:16px;right:16px;bottom:96px;font-weight:600;margin:0 auto;max-width:480px;background:var(--ink);color:var(--bg);padding:12px 14px;border-radius:12px;font-size:14px;z-index:20}
+.toast[hidden]{display:none}
+@media (prefers-reduced-motion:no-preference){.fill{transition:width .3s ease}}
+</style>
+</head>
+<body>
+<div class="app">
+  <main id="main"></main>
+  <nav aria-label="Hlavné menu">
+    <a href="#domov" data-tab="domov">Domov</a>
+    <a href="#prehlad" data-tab="prehlad">Prehľad</a>
+    <a href="#mesiace" data-tab="mesiace">Mesiace</a>
+  </nav>
+</div>
+<div class="overlay" id="overlay" hidden><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+(function(){
+"use strict";
+var CATS=[
+  {id:"sporenie",name:"Sporenie",c:"var(--c1)"},
+  {id:"povinne",name:"Povinné",c:"var(--c2)"},
+  {id:"potrebujem",name:"Potrebujem",c:"var(--c3)"},
+  {id:"strava",name:"Strava",c:"var(--c4)"},
+  {id:"chcem",name:"Chcem",c:"var(--c5)"},
+  {id:"vzdelanie",name:"Vzdelanie",c:"var(--c6)"},
+  {id:"podnikanie",name:"Podnikanie",c:"var(--c7)"}
+];
+var CAT={}; CATS.forEach(function(c){CAT[c.id]=c;});
+var LS="moje-vydavky-v1";
+var months=[];            // oldest first: {id, startedAt, entries:[{id,t,cat,cents,note,ts}]}
+var mode="loading";       // loading | cloud | local | error
+var ready=false, loadNote="", col=null, viewId=null;
+var queue={};
+
+/* ---------- helpers ---------- */
+function h(tag,attrs,kids){
+  var el=document.createElement(tag),k;
+  if(attrs)for(k in attrs){
+    if(k==="text")el.textContent=attrs[k];
+    else if(k==="on")for(var ev in attrs.on)el.addEventListener(ev,attrs.on[ev]);
+    else if(k==="style")el.style.cssText=attrs[k];
+    else if(attrs[k]===true)el.setAttribute(k,"");
+    else if(attrs[k]!==false&&attrs[k]!=null)el.setAttribute(k,attrs[k]);
+  }
+  (kids||[]).forEach(function(c){if(c!=null)el.appendChild(typeof c==="string"?document.createTextNode(c):c);});
+  return el;
+}
+var nf=new Intl.NumberFormat("sk-SK",{style:"currency",currency:"EUR"});
+function eur(cents){return nf.format(cents/100);}
+function signed(cents,t){return (t==="in"?"+":"−")+eur(cents);}
+function fmtDate(iso,withYear){
+  var o={day:"numeric",month:"numeric"}; if(withYear)o.year="numeric";
+  return new Date(iso).toLocaleDateString("sk-SK",o);
+}
+function newId(p){return p+Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
+function parseAmount(s){
+  var n=parseFloat(String(s).replace(/\s|€/g,"").replace(",","."));
+  if(!isFinite(n)||n<=0)return null;
+  return Math.round(n*100);
+}
+function current(){return months.length?months[months.length-1]:null;}
+function totals(m){
+  var r={inc:0,out:0,cat:{}};
+  if(!m)return r;
+  m.entries.forEach(function(e){
+    if(e.t==="in")r.inc+=e.cents;
+    else{r.out+=e.cents;r.cat[e.cat]=(r.cat[e.cat]||0)+e.cents;}
+  });
+  return r;
+}
+var MONTHS_SK=["Január","Február","Marec","Apríl","Máj","Jún","Júl","August","September","Október","November","December"];
+function autoName(iso){var d=new Date(iso);return MONTHS_SK[d.getMonth()]+" \u2019"+String(d.getFullYear()).slice(2);}
+function monthName(m){return m.name||autoName(m.startedAt);}
+function monthTitle(m){return monthName(m)+" · od "+fmtDate(m.startedAt,true);}
+function monthRange(i){
+  var m=months[i],next=months[i+1];
+  return fmtDate(m.startedAt,true)+" – "+(next?fmtDate(next.startedAt,true):"dnes");
+}
+var toastTimer;
+function toast(msg){
+  var t=document.getElementById("toast");
+  t.textContent=msg;t.hidden=false;
+  clearTimeout(toastTimer);toastTimer=setTimeout(function(){t.hidden=true;},4500);
+}
+function canWrite(){return ready&&(mode==="cloud"||mode==="local");}
+
+/* ---------- storage ---------- */
+function sortMonths(){months.sort(function(a,b){return a.startedAt<b.startedAt?-1:a.startedAt>b.startedAt?1:0;});}
+function pending(id){var s=queue[id];return !!(s&&(s.busy||s.dirty));}
+function saveMonth(m){
+  if(mode==="local"){
+    try{localStorage.setItem(LS,JSON.stringify(months));}
+    catch(e){toast("Nepodarilo sa uložiť do tohto prehliadača.");}
+    return;
+  }
+  if(mode!=="cloud")return;
+  var s=queue[m.id]||(queue[m.id]={busy:false,dirty:false});
+  if(s.busy){s.dirty=true;return;}
+  s.busy=true;
+  var body={startedAt:m.startedAt,name:m.name||"",entries:m.entries.map(function(e){return {id:e.id,t:e.t,cat:e.cat||"",cents:e.cents,note:e.note||"",ts:e.ts};})};
+  col.doc(m.id).set(body).catch(function(){
+    toast("Nepodarilo sa uložiť. Skontroluj pripojenie a skús to znova.");
+  }).then(function(){
+    s.busy=false;
+    if(s.dirty){s.dirty=false;var cur=months.filter(function(x){return x.id===m.id;})[0];if(cur)saveMonth(cur);}
+  });
+}
+function initStore(){
+  var p;
+  if(window.claude&&typeof window.claude.use==="function"){
+    p=Promise.all([window.claude.use("db"),window.claude.use("user")]).then(function(r){
+      if(!r[0]||!r[1])return null;
+      return r[1].id().then(function(uid){return uid?{db:r[0],uid:uid}:null;});
+    }).catch(function(){return null;});
+  }else p=Promise.resolve(null);
+  p.then(function(ctx){
+    if(!ctx){
+      mode="local";
+      try{var raw=localStorage.getItem(LS);if(raw)months=JSON.parse(raw)||[];}catch(e){months=[];}
+      sortMonths();ready=true;render();return;
+    }
+    mode="cloud";
+    try{col=ctx.db.collection("data/users/"+ctx.uid);}
+    catch(e){mode="error";ready=true;loadNote="Údaje sa nepodarilo načítať.";render();return;}
+    var timer=setTimeout(function(){
+      loadNote=ready?"Údaje môžu byť neaktuálne, čakám na spojenie.":"Údaje sa zatiaľ nepodarilo načítať. Skontroluj pripojenie.";
+      render();
+    },10000);
+    col.onSnapshot(function(snap){
+      var fresh=[];
+      snap.docs.forEach(function(d){
+        if(!d.exists||pending(d.id))return;
+        var x=d.data();
+        if(!x||!x.startedAt)return;
+        fresh.push({id:d.id,startedAt:x.startedAt,name:x.name||"",entries:(x.entries||[]).map(function(e){return {id:e.id,t:e.t,cat:e.cat,cents:e.cents,note:e.note,ts:e.ts};})});
+      });
+      months.forEach(function(m){if(pending(m.id))fresh.push(m);});
+      months=fresh;sortMonths();
+      if(!snap.metadata.fromCache){clearTimeout(timer);loadNote="";ready=true;}
+      else if(months.length)ready=true;
+      render();
+    },function(){
+      clearTimeout(timer);mode="error";ready=true;
+      loadNote="Spojenie s úložiskom sa prerušilo. Otvor stránku znova, aby si mohol pridávať záznamy.";
+      render();
+    });
+    render();
+  });
+}
+
+/* ---------- actions ---------- */
+function addEntry(t,cat,cents,note){
+  var m=current();
+  if(!m){m={id:newId("m"),startedAt:new Date().toISOString(),name:"",entries:[]};months.push(m);}
+  m.entries.push({id:newId("e"),t:t,cat:t==="out"?cat:"",cents:cents,note:note,ts:new Date().toISOString()});
+  saveMonth(m);render();
+}
+function removeEntry(mid,eid){
+  var m=months.filter(function(x){return x.id===mid;})[0];if(!m)return;
+  m.entries=m.entries.filter(function(e){return e.id!==eid;});
+  saveMonth(m);render();
+}
+function startNewMonth(){
+  var prev=current(),bal=0,now=new Date().toISOString();
+  if(prev){var pt=totals(prev);bal=pt.inc-pt.out;}
+  var m={id:newId("m"),startedAt:now,name:"",entries:[]};
+  if(bal>0)m.entries.push({id:newId("e"),t:"in",cat:"",cents:bal,note:"Zostatok z posledného mesiaca",ts:now});
+  else if(bal<0)m.entries.push({id:newId("e"),t:"out",cat:"",cents:-bal,note:"Mínus z posledného mesiaca",ts:now});
+  months.push(m);viewId=null;saveMonth(m);render();
+}
+function renameMonth(m){
+  var input=h("input",{type:"text",id:"f-name",autocomplete:"off",maxlength:"30",value:monthName(m)});
+  var form=h("form",{style:"display:flex;flex-direction:column;gap:14px",on:{submit:function(ev){
+    ev.preventDefault();
+    var v=input.value.trim();
+    m.name=(v&&v!==autoName(m.startedAt))?v:"";
+    saveMonth(m);closeSheet();render();
+  }}},[
+    h("label",{for:"f-name"},["Názov mesiaca",input]),
+    h("div",{class:"muted small",text:"Ak pole necháš prázdne, vráti sa automatický názov "+autoName(m.startedAt)+"."}),
+    h("div",{class:"row"},[
+      h("button",{type:"submit",class:"btn primary",text:"Uložiť názov"}),
+      h("button",{type:"button",class:"btn",text:"Zrušiť",on:{click:closeSheet}})
+    ])
+  ]);
+  openSheet([h("h2",{text:"Premenovať mesiac"}),form]);
+  input.focus();input.select();
+}
+
+/* ---------- sheets ---------- */
+var overlay=document.getElementById("overlay"),sheet=document.getElementById("sheet");
+function closeSheet(){overlay.hidden=true;sheet.textContent="";}
+overlay.addEventListener("click",function(e){if(e.target===overlay)closeSheet();});
+document.addEventListener("keydown",function(e){if(e.key==="Escape"&&!overlay.hidden)closeSheet();});
+function openSheet(nodes){sheet.textContent="";nodes.forEach(function(n){sheet.appendChild(n);});overlay.hidden=false;}
+
+function openEntryForm(t,cat){
+  if(t==="out"&&!cat){openCategoryPicker();return;}
+  var amount=h("input",{type:"text",id:"f-amount",inputmode:"decimal",autocomplete:"off",placeholder:"0,00"});
+  var note=h("input",{type:"text",id:"f-note",autocomplete:"off",maxlength:"120",placeholder:t==="in"?"napr. od mamy k narodeninám":"napr. McDonald's"});
+  var err=h("div",{class:"err",id:"f-err","aria-live":"polite"});
+  var form=h("form",{style:"display:flex;flex-direction:column;gap:14px",on:{submit:function(ev){
+    ev.preventDefault();
+    var cents=parseAmount(amount.value);
+    if(cents===null){err.textContent="Zadaj sumu väčšiu ako 0, napríklad 30 alebo 12,50.";amount.focus();return;}
+    addEntry(t,cat,cents,note.value.trim());
+    closeSheet();
+    toast("Uložené: "+signed(cents,t));
+  }}},[
+    h("label",{for:"f-amount"},["Suma v €",amount]),
+    h("label",{for:"f-note"},["Komentár",note]),
+    err,
+    h("div",{class:"row"},[
+      h("button",{type:"submit",class:"btn primary",text:t==="in"?"Uložiť príjem":"Uložiť výdavok"}),
+      t==="out"?h("button",{type:"button",class:"btn",text:"Zmeniť kategóriu",on:{click:openCategoryPicker}}):null,
+      h("button",{type:"button",class:"btn",text:"Zrušiť",on:{click:closeSheet}})
+    ])
+  ]);
+  var head=t==="in"?h("h2",{text:"Nový príjem"}):
+    h("div",{class:"row"},[h("span",{class:"dot",style:"background:"+CAT[cat].c}),h("h2",{text:"Výdavok · "+CAT[cat].name})]);
+  openSheet([head,form]);
+  amount.focus();
+}
+function openCategoryPicker(){
+  var grid=h("div",{class:"cats"},CATS.map(function(c){
+    return h("button",{type:"button",class:"cat",on:{click:function(){openEntryForm("out",c.id);}}},[
+      h("span",{class:"dot",style:"background:"+c.c}),c.name]);
+  }));
+  openSheet([
+    h("h2",{text:"Na čo to bolo?"}),grid,
+    h("div",{class:"row"},[h("button",{type:"button",class:"btn",text:"Zrušiť",on:{click:closeSheet}})])
+  ]);
+}
+function confirmSheet(title,text,okLabel,danger,onOk){
+  openSheet([
+    h("h2",{text:title}),h("div",{class:"muted",text:text}),
+    h("div",{class:"row"},[
+      h("button",{type:"button",class:"btn "+(danger?"danger":"primary"),text:okLabel,on:{click:function(){closeSheet();onOk();}}}),
+      h("button",{type:"button",class:"btn",text:"Zrušiť",on:{click:closeSheet}})
+    ])
+  ]);
+}
+
+/* ---------- views ---------- */
+function entryRow(m,e,editable){
+  var c=e.t==="out"?CAT[e.cat]:null;
+  var label=e.t==="in"?"Príjem":(c?c.name:"Výdavok");
+  return h("div",{class:"entry"},[
+    h("span",{class:"dot",style:"background:"+(e.t==="in"?"var(--accent)":(c?c.c:"var(--muted)"))}),
+    h("div",{class:"what"},[
+      h("b",{text:e.note||label}),
+      h("span",{class:"muted small",text:(e.note?label+" · ":"")+fmtDate(e.ts)})
+    ]),
+    h("span",{class:"amt",text:signed(e.cents,e.t)}),
+    editable?h("button",{type:"button",class:"x","aria-label":"Zmazať záznam "+(e.note||label),text:"×",on:{click:function(){
+      confirmSheet("Zmazať záznam?",(e.note||label)+" · "+signed(e.cents,e.t),"Zmazať",true,function(){removeEntry(m.id,e.id);});
+    }}}):h("span")
+  ]);
+}
+function statusNotes(){
+  var out=[];
+  if(!window.navigator.standalone&&!(window.matchMedia&&window.matchMedia("(display-mode: standalone)").matches))out.push(h("div",{class:"note",text:"Pridaj si aplikáciu na plochu: v Safari ťukni na Zdieľať a potom Pridať na plochu. Záznamy sa ukladajú v tomto telefóne."}));
+  if(loadNote)out.push(h("div",{class:"note",text:loadNote}));
+  return out;
+}
+function viewHome(){
+  var m=current(),t=totals(m),kids=[];
+  var left=t.inc?Math.max(0,Math.min(100,Math.round((t.inc-t.out)/t.inc*100))):0;
+  kids.push(h("div",{class:"row between"},[
+    h("div",null,[h("h1",{text:"Moje výdavky"}),
+      m?h("button",{type:"button",class:"link","aria-label":"Premenovať mesiac "+monthName(m),disabled:!canWrite(),on:{click:function(){renameMonth(m);}}},[monthTitle(m)+" · ",h("u",{text:"premenovať"})])
+       :h("div",{class:"muted small",text:"Mesiac sa začne prvým záznamom"})]),
+    h("button",{type:"button",class:"btn",text:"Nový mesiac",disabled:!canWrite()||!m,on:{click:function(){
+      if(!m.entries.length){toast("Aktuálny mesiac je ešte prázdny, stačí doň začať zapisovať.");return;}
+      var bal=t.inc-t.out,nm=autoName(new Date().toISOString());
+      confirmSheet("Začať nový mesiac?",monthName(m)+" sa uzavrie a nájdeš ho v záložke Mesiace. Nový mesiac sa nazve "+nm+(bal?" a zostatok "+eur(bal)+" sa doň prenesie ako prvý záznam, ktorý môžeš krížikom zmazať.":"."),"Začať nový mesiac",false,startNewMonth);
+    }}})
+  ]));
+  statusNotes().forEach(function(n){kids.push(n);});
+  if(!ready&&mode!=="error")kids.push(h("div",{class:"note",text:"Načítavam tvoje záznamy…"}));
+  kids.push(h("div",{class:"card"},[
+    h("div",null,[h("div",{class:"muted small",text:"Zostáva tento mesiac"}),h("div",{class:"balance",text:eur(t.inc-t.out)})]),
+    t.inc?h("div",{class:"meter",role:"img","aria-label":"Z príjmov ostáva "+left+" %"},[h("div",{style:"width:"+left+"%"})]):null,
+    t.inc?h("div",{class:"muted small",text:"Z príjmov ti ostáva "+left+" %"}):null,
+    h("div",{class:"split"},[
+      h("div",null,[h("span",{class:"muted small",text:"Príjmy"}),h("strong",{text:eur(t.inc)})]),
+      h("div",null,[h("span",{class:"muted small",text:"Výdavky"}),h("strong",{text:eur(t.out)})])
+    ])
+  ]));
+  kids.push(h("div",{class:"actions"},[
+    h("button",{type:"button",class:"big in",disabled:!canWrite(),on:{click:function(){openEntryForm("in");}}},["+ Príjem",h("span",{text:"suma a komentár"})]),
+    h("button",{type:"button",class:"big out",disabled:!canWrite(),on:{click:function(){openEntryForm("out");}}},["− Výdavok",h("span",{text:"vyber kategóriu"})])
+  ]));
+  var list=h("div",{class:"list"});
+  if(m&&m.entries.length)m.entries.slice().reverse().forEach(function(e){list.appendChild(entryRow(m,e,canWrite()));});
+  else list.appendChild(h("div",{class:"muted",text:"Zatiaľ žiadne záznamy. Ťukni na Príjem alebo Výdavok a zapíš prvý."}));
+  kids.push(h("div",{class:"card"},[h("h2",{text:"Záznamy tohto mesiaca"}),list]));
+  return kids;
+}
+function viewOverview(){
+  var kids=[h("h1",{text:"Prehľad"})];
+  if(!months.length){kids.push(h("div",{class:"card"},[h("div",{class:"muted",text:"Grafy sa objavia po prvom zázname."})]));return kids;}
+  var idx=months.length-1;
+  months.forEach(function(m,i){if(m.id===viewId)idx=i;});
+  var m=months[idx],t=totals(m);
+  var sel=h("select",{id:"month-select","aria-label":"Mesiac",on:{change:function(){viewId=sel.value;render();}}},
+    months.slice().reverse().map(function(x){
+      var i=months.indexOf(x);
+      return h("option",{value:x.id,selected:x.id===m.id,text:monthName(x)+" · "+monthRange(i)+(i===months.length-1?" (aktuálny)":"")});
+    }));
+  kids.push(sel);
+  kids.push(h("div",{class:"row"},[h("button",{type:"button",class:"btn",text:"Premenovať tento mesiac",disabled:!canWrite(),on:{click:function(){renameMonth(m);}}})]));
+
+  var rows=CATS.map(function(c){return {c:c,v:t.cat[c.id]||0};}).sort(function(a,b){return b.v-a.v;});
+  var max=rows[0].v;
+  var card=[h("h2",{text:"Kam išli peniaze"})];
+  if(!t.out)card.push(h("div",{class:"muted",text:"V tomto mesiaci zatiaľ nie sú žiadne výdavky."}));
+  else{
+    var top=rows[0];
+    card.push(h("div",{class:"muted",text:"Najviac míňaš na "+top.c.name+": "+eur(top.v)+", čo je "+Math.round(top.v/t.out*100)+" % výdavkov."}));
+    card.push(h("div",{class:"bars"},rows.map(function(r){
+      var pct=t.out?Math.round(r.v/t.out*100):0;
+      return h("div",{class:"bar-row",title:r.c.name+": "+eur(r.v)},[
+        h("div",{class:"bar-head"},[h("span",{text:r.c.name}),h("span",{class:"v",text:eur(r.v)+" · "+pct+" %"})]),
+        h("div",{class:"track"},[r.v?h("div",{class:"fill",style:"background:"+r.c.c+";width:"+(r.v/max*100)+"%"}):null])
+      ]);
+    })));
+  }
+  kids.push(h("div",{class:"card"},card));
+
+  kids.push(h("div",{class:"card"},[
+    h("div",{class:"row between"},[h("h2",{text:"Bilancia mesiaca"}),h("strong",{class:"amt",text:eur(t.inc-t.out)})]),
+    h("div",{class:"split"},[
+      h("div",null,[h("span",{class:"muted small",text:"Príjmy"}),h("strong",{text:eur(t.inc)})]),
+      h("div",null,[h("span",{class:"muted small",text:"Výdavky"}),h("strong",{text:eur(t.out)})])
+    ])
+  ]));
+
+  var last=months.slice(),all=last.map(totals),mx=0;
+  all.forEach(function(x){mx=Math.max(mx,x.inc,x.out);});
+  kids.push(h("div",{class:"card"},[
+    h("h2",{text:"Mesiace vedľa seba"}),
+    h("div",{class:"legend"},[
+      h("span",null,[h("span",{class:"key",style:"background:var(--c1)"}),"Príjmy"]),
+      h("span",null,[h("span",{class:"key",style:"background:var(--c2)"}),"Výdavky"])
+    ]),
+    h("div",{class:"bars"},last.slice().reverse().map(function(x){
+      var tt=all[last.indexOf(x)];
+      function line(v,col){return h("div",{class:"line"},[
+        h("div",{class:"track"},[v?h("div",{class:"fill",style:"background:"+col+";width:"+(mx?v/mx*100:0)+"%"}):null]),
+        h("span",{class:"v",text:eur(v)})]);}
+      return h("div",{class:"bar-row"},[
+        h("div",{class:"bar-head"},[h("span",{text:monthName(x)})]),
+        h("div",{class:"pair"},[line(tt.inc,"var(--c1)"),line(tt.out,"var(--c2)")])
+      ]);
+    }))
+  ]));
+
+  var list=h("div",{class:"list"});
+  if(m.entries.length)m.entries.slice().reverse().forEach(function(e){list.appendChild(entryRow(m,e,false));});
+  else list.appendChild(h("div",{class:"muted",text:"Žiadne záznamy."}));
+  kids.push(h("div",{class:"card"},[h("h2",{text:"Všetky záznamy mesiaca"}),list]));
+  return kids;
+}
+function viewMonths(){
+  var kids=[h("h1",{text:"Mesiace"})];
+  if(!months.length){kids.push(h("div",{class:"card"},[h("div",{class:"muted",text:"Prvý mesiac vznikne s prvým záznamom. Po výplate ťukni na Domov na Nový mesiac."})]));kids.push(backupCard());return kids;}
+  var list=h("div",{class:"list"});
+  months.slice().reverse().forEach(function(m){
+    var i=months.indexOf(m),t=totals(m);
+    list.appendChild(h("button",{type:"button",class:"month",on:{click:function(){viewId=m.id;location.hash="prehlad";}}},[
+      h("span",null,[h("b",{text:monthName(m)}),i===months.length-1?h("span",{class:"pill",text:"aktuálny"}):null]),
+      h("span",{class:"amt",text:eur(t.inc-t.out)}),
+      h("span",{class:"muted small",text:monthRange(i)}),
+      h("span",{class:"muted small",text:m.entries.length+(m.entries.length===1?" záznam":(m.entries.length>=2&&m.entries.length<=4?" záznamy":" záznamov"))})
+    ]));
+  });
+  kids.push(h("div",{class:"card"},[list]));
+  kids.push(h("div",{class:"muted small",text:"Ťukni na mesiac a otvorí sa jeho prehľad s grafmi."}));
+  kids.push(backupCard());
+  return kids;
+}
+/* ---------- backup ---------- */
+var LSB=LS+"-backup-at";
+function lastBackup(){try{return localStorage.getItem(LSB);}catch(e){return null;}}
+function exportBackup(){
+  var data=JSON.stringify({app:"moje-vydavky",version:1,exportedAt:new Date().toISOString(),months:months},null,1);
+  var name="moje-vydavky-"+new Date().toISOString().slice(0,10)+".json";
+  function done(){try{localStorage.setItem(LSB,new Date().toISOString());}catch(e){}render();}
+  function viaLink(){
+    var url=URL.createObjectURL(new Blob([data],{type:"application/json"}));
+    var a=h("a",{href:url,download:name});document.body.appendChild(a);a.click();a.remove();
+    setTimeout(function(){URL.revokeObjectURL(url);},60000);done();
+  }
+  try{
+    var file=new File([data],name,{type:"application/json"});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){
+      navigator.share({files:[file],title:"Záloha Moje výdavky"}).then(done,function(e){if(!e||e.name!=="AbortError")viaLink();});
+      return;
+    }
+  }catch(e){}
+  viaLink();
+}
+function validBackup(d){
+  if(!d||!Array.isArray(d.months))return false;
+  return d.months.every(function(m){
+    return m&&typeof m.id==="string"&&typeof m.startedAt==="string"&&Array.isArray(m.entries)&&m.entries.every(function(e){
+      return e&&(e.t==="in"||e.t==="out")&&typeof e.cents==="number"&&e.cents>0&&typeof e.ts==="string";});
+  });
+}
+function importBackup(file){
+  var r=new FileReader();
+  r.onerror=function(){toast("Súbor sa nepodarilo prečítať.");};
+  r.onload=function(){
+    var d=null;try{d=JSON.parse(r.result);}catch(e){}
+    if(!validBackup(d)){toast("Toto nie je záloha z aplikácie Moje výdavky.");return;}
+    var n=0;d.months.forEach(function(m){n+=m.entries.length;});
+    confirmSheet("Obnoviť zo zálohy?","Záloha obsahuje "+d.months.length+" mesiacov a "+n+" záznamov. Nahradí všetko, čo je teraz v aplikácii.","Nahradiť zálohou",true,function(){
+      months=d.months.map(function(m){return {id:m.id,startedAt:m.startedAt,name:String(m.name||"").slice(0,30),entries:m.entries.map(function(e){
+        return {id:String(e.id||newId("e")),t:e.t,cat:CAT[e.cat]?e.cat:"",cents:Math.round(e.cents),note:String(e.note||"").slice(0,120),ts:e.ts};})};});
+      sortMonths();viewId=null;
+      try{localStorage.setItem(LS,JSON.stringify(months));toast("Záloha je obnovená.");}catch(e){toast("Nepodarilo sa uložiť do telefónu.");}
+      render();
+    });
+  };
+  r.readAsText(file);
+}
+function backupCard(){
+  var lb=lastBackup();
+  var input=h("input",{type:"file",id:"backup-file",accept:".json,application/json",style:"display:none",on:{change:function(){if(input.files&&input.files[0])importBackup(input.files[0]);input.value="";}}});
+  return h("div",{class:"card"},[
+    h("h2",{text:"Záloha"}),
+    h("div",{class:"muted small",text:"Záznamy sú uložené len v tomto telefóne. Záloha je súbor, ktorý si uložíš do Súborov alebo iCloudu a z ktorého sa dá všetko obnoviť, aj na novom telefóne."}),
+    h("div",{class:"muted small",text:lb?"Posledná záloha: "+fmtDate(lb,true):"Zatiaľ žiadna záloha."}),
+    h("div",{class:"row",style:"flex-wrap:wrap"},[
+      h("button",{type:"button",class:"btn primary",text:"Zálohovať do súboru",disabled:!months.length,on:{click:exportBackup}}),
+      h("button",{type:"button",class:"btn",text:"Obnoviť zo zálohy",on:{click:function(){input.click();}}}),
+      input
+    ])
+  ]);
+}
+var TABS={domov:viewHome,prehlad:viewOverview,mesiace:viewMonths};
+function render(){
+  var tab=location.hash.replace("#","");
+  if(!TABS[tab])tab="domov";
+  var main=document.getElementById("main");
+  var keep=main.scrollTop,same=main.getAttribute("data-tab")===tab;
+  main.textContent="";
+  TABS[tab]().forEach(function(n){main.appendChild(n);});
+  main.setAttribute("data-tab",tab);
+  main.scrollTop=same?keep:0;
+  Array.prototype.forEach.call(document.querySelectorAll("nav a"),function(a){
+    if(a.getAttribute("data-tab")===tab)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current");
+  });
+}
+window.addEventListener("hashchange",render);
+render();
+initStore();
+if(navigator.storage&&navigator.storage.persist){try{navigator.storage.persist().catch(function(){});}catch(e){}}
+if("serviceWorker" in navigator&&location.protocol==="https:"){navigator.serviceWorker.register("sw.js").catch(function(){});}
+})();
+</script>
+</body>
+</html>
