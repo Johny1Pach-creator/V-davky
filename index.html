@@ -36,6 +36,12 @@ h1,h2{font-family:var(--display);margin:0;text-wrap:balance}
 h1{font-size:21px;font-weight:700}
 h2{font-size:16px;font-weight:700}
 .muted{color:var(--muted)}
+.reveal{width:100%;padding:14px;text-align:center;font-weight:700;border-radius:16px}
+.switch{display:grid;grid-template-columns:48px 1fr 48px;align-items:center;gap:8px}
+.switch-mid{text-align:center;min-width:0}
+.month-big{font-size:30px;font-weight:800;text-transform:uppercase;letter-spacing:-.01em;line-height:1.1;overflow-wrap:anywhere}
+.arrow{width:48px;height:48px;border-radius:14px;border:1px solid var(--raised-line);background:var(--raised);font-size:26px;line-height:1;padding:0 0 4px}
+.arrow:disabled{opacity:.3;cursor:default}
 .link{border:0;background:transparent;padding:6px 0;color:var(--muted);font-size:13px;text-align:left}
 .link u{color:var(--accent);text-underline-offset:3px}
 .link:disabled u{display:none}
@@ -138,6 +144,7 @@ var months=[];            // oldest first: {id, startedAt, entries:[{id,t,cat,ce
 var mode="loading";       // loading | cloud | local | error
 var ready=false, loadNote="", col=null, viewId=null;
 var queue={};
+var showBalance=false;
 
 /* ---------- helpers ---------- */
 function h(tag,attrs,kids){
@@ -385,7 +392,8 @@ function viewHome(){
   ]));
   statusNotes().forEach(function(n){kids.push(n);});
   if(!ready&&mode!=="error")kids.push(h("div",{class:"note",text:"Načítavam tvoje záznamy…"}));
-  kids.push(h("div",{class:"card"},[
+  kids.push(h("button",{type:"button",class:"btn reveal","aria-expanded":showBalance?"true":"false",text:showBalance?"Skryť zostatok":"Zobraziť zostatok",on:{click:function(){showBalance=!showBalance;render();}}}));
+  if(showBalance)kids.push(h("div",{class:"card"},[
     h("div",null,[h("div",{class:"muted small",text:"Zostáva tento mesiac"}),h("div",{class:"balance",text:eur(t.inc-t.out)})]),
     t.inc?h("div",{class:"meter",role:"img","aria-label":"Z príjmov ostáva "+left+" %"},[h("div",{style:"width:"+left+"%"})]):null,
     t.inc?h("div",{class:"muted small",text:"Z príjmov ti ostáva "+left+" %"}):null,
@@ -410,12 +418,15 @@ function viewOverview(){
   var idx=months.length-1;
   months.forEach(function(m,i){if(m.id===viewId)idx=i;});
   var m=months[idx],t=totals(m);
-  var sel=h("select",{id:"month-select","aria-label":"Mesiac",on:{change:function(){viewId=sel.value;render();}}},
-    months.slice().reverse().map(function(x){
-      var i=months.indexOf(x);
-      return h("option",{value:x.id,selected:x.id===m.id,text:monthName(x)+" · "+monthRange(i)+(i===months.length-1?" (aktuálny)":"")});
-    }));
-  kids.push(sel);
+  function go(d){var n=months[idx+d];if(n){viewId=n.id;render();}}
+  kids=[h("div",{class:"switch"},[
+    h("button",{type:"button",class:"arrow","aria-label":"Starší mesiac",disabled:idx===0,text:"\u2039",on:{click:function(){go(-1);}}}),
+    h("div",{class:"switch-mid"},[
+      h("h1",{class:"month-big",text:monthName(m)}),
+      h("div",{class:"muted small",text:monthRange(idx)+(idx===months.length-1?" · aktuálny":"")})
+    ]),
+    h("button",{type:"button",class:"arrow","aria-label":"Novší mesiac",disabled:idx===months.length-1,text:"\u203a",on:{click:function(){go(1);}}})
+  ])];
   kids.push(h("div",{class:"row"},[h("button",{type:"button",class:"btn",text:"Premenovať tento mesiac",disabled:!canWrite(),on:{click:function(){renameMonth(m);}}})]));
 
   var rows=CATS.map(function(c){return {c:c,v:t.cat[c.id]||0};}).sort(function(a,b){return b.v-a.v;});
@@ -561,6 +572,7 @@ function render(){
   });
 }
 window.addEventListener("hashchange",render);
+document.addEventListener("visibilitychange",function(){if(document.hidden&&showBalance){showBalance=false;render();}});
 render();
 initStore();
 if(navigator.storage&&navigator.storage.persist){try{navigator.storage.persist().catch(function(){});}catch(e){}}
